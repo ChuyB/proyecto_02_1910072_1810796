@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
+import { Rain } from "./materials/rain";
 
 class App {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private shader;
-  private geometry: THREE.PlaneGeometry | THREE.BoxGeometry;
-  private mesh: THREE.Mesh;
+  private mesh: THREE.Points;
   private clock: THREE.Clock;
   private controls: OrbitControls;
 
@@ -59,53 +59,23 @@ class App {
     // GUI controls
     const gui = new GUI();
     const folder = gui.addFolder("General Settings");
-    const selectedGeometry = { position: 0 };
     const selectedMaterial = { position: 0 };
-    // folder
-    //   .add(selectedMaterial, "position", {
-    //     SimpleWave: 0,
-    //     BlinnPhong: 1,
-    //     CRT: 2,
-    //   })
-    //   .name("Material")
-    //   .onChange(() => {
-    //     this.shader = shaders[selectedMaterial.position];
-    //     this.mesh.material = this.shader.material;
-    //   });
-    // folder
-    //   .add(selectedGeometry, "position", { Plane: 0, Box: 1 })
-    //   .name("Geometry")
-    //   .onChange(() => {
-    //     this.geometry = geometries[selectedGeometry.position];
-    //     this.mesh.geometry = this.geometry;
-    //   });
-
-    // Create geometries
-    const geometrySize = 4.0;
-    const planeGeometry = new THREE.PlaneGeometry(
-      geometrySize,
-      geometrySize,
-      64,
-      64,
-    );
-    const boxGeometry = new THREE.BoxGeometry(
-      geometrySize,
-      geometrySize,
-      geometrySize,
-      64,
-      64,
-      64,
-    );
+    folder
+      .add(selectedMaterial, "position", {
+        Rain: 0,
+      })
+      .name("Particle system")
+      .onChange(() => {
+        this.shader = shaders[selectedMaterial.position];
+        this.mesh.material = this.shader.material;
+      });
     
-    // Create shader materials
-
     // Arrays of geometries and shaders
-    const geometries = [planeGeometry, boxGeometry];
-    const shaders = [];
+    const rain = new Rain(this.camera, gui);
+    const shaders = [rain];
 
-    this.geometry = geometries[selectedGeometry.position];
     this.shader = shaders[selectedMaterial.position];
-    this.mesh = new THREE.Mesh(this.geometry, this.shader.material);
+    this.mesh = new THREE.Points(this.shader.geometry, this.shader.material);
     this.scene.add(this.mesh);
 
     // Initialize

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
 import { Rain } from "./materials/rain";
+import { Trail } from "./materials/trail";
 
 class App {
   private scene: THREE.Scene;
@@ -63,6 +64,7 @@ class App {
     folder
       .add(selectedMaterial, "position", {
         Rain: 0,
+        Trail: 1,
       })
       .name("Particle system")
       .onChange(() => {
@@ -72,7 +74,8 @@ class App {
     
     // Arrays of geometries and shaders
     const rain = new Rain(this.camera, gui);
-    const shaders = [rain];
+    const trail = new Trail(this.camera, gui);
+    const shaders = [rain,trail];
 
     this.shader = shaders[selectedMaterial.position];
     this.mesh = new THREE.Points(this.shader.geometry, this.shader.material);
@@ -87,6 +90,14 @@ class App {
 
     // Add event listeners
     window.addEventListener("resize", this.onWindowResize);
+    window.addEventListener("mousemove", (event) => {
+      if ("updateMouse" in this.shader && typeof this.shader.updateMouse ==="function") {
+        const mouseX = event.clientX / window.innerWidth * 2 - 1;
+        const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+        this.shader.updateMouse(mouseX, mouseY);
+      }
+    });
 
     // Start the main loop
     this.renderer.setAnimationLoop(this.animate);

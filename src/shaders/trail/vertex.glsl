@@ -20,18 +20,8 @@ void main() {
   vec3 newPosition = position;
 
   float age = uTime - uLastSpawnTime;
-
-  //if (age > uLifetime) {
-    //newPosition = uObjectPosition;
-    //+ vec3(
-     // (fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * uSpawnRadius * 100000.0,
-     // (fract(sin(dot(position.yz, vec2(93.9898, 67.345))) * 43758.5453) - 0.5) * uSpawnRadius * 100000.0,
-     // 0.0
-     newPosition.y -= uSpeed * age;
-     // );
-  } else {
-    newPosition.y -= uSpeed * age;
-  }
+  newPosition += uObjectPosition;
+  newPosition.y -= uSpeed * age;
   
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
   gl_Position = projectionMatrix * viewMatrix * modelPosition;

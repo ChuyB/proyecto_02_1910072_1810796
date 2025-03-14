@@ -92,7 +92,7 @@ class App {
     window.addEventListener("resize", this.onWindowResize);
     window.addEventListener("mousemove", (event) => {
       if ("updateMouse" in this.shader && typeof this.shader.updateMouse ==="function") {
-        const mouseX = event.clientX / window.innerWidth * 2 - 1;
+        const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
         const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
       
         this.shader.updateMouse(mouseX, mouseY);

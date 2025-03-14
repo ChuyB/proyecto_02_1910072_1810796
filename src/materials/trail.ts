@@ -52,6 +52,9 @@ export class Trail {
         uLastSpawnTime: { value: this.defaultUniforms.uLastSpawnTime },
       },
       glslVersion: THREE.GLSL3,
+      transparent: true, // Enable transparency
+      blending: THREE.NormalBlending, // Enable alpha blending
+      depthWrite: false, 
     });
     return material;
   }

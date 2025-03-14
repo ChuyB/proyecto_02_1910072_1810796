@@ -15,6 +15,8 @@ uniform float uLifetime;
 uniform float uSpawnRadius;
 uniform float uLastSpawnTime;
 
+out vec4 vPosition;
+
 void main() {
   
   vec3 newPosition = position;
@@ -24,7 +26,8 @@ void main() {
   newPosition.y -= uSpeed * age;
   
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
-  gl_Position = projectionMatrix * viewMatrix * modelPosition;
+  vPosition = projectionMatrix * viewMatrix * modelPosition;
+  gl_Position = vPosition;
   
   gl_PointSize = uSize * size;
   //gl_PointSize = uSpawnRadius * 10.0; // Larger points for higher ages

@@ -94,11 +94,7 @@ export class Trail {
     //const positions = this.geometry.attributes.position.array;
     //const count = positions.length/3;
 
-    console.log("Position: " + this.material.uniforms.uObjectPosition.value.x + ", " + this.material.uniforms.uObjectPosition.value.y + ", " + this.material.uniforms.uObjectPosition.value.z);
-    console.log("Last spawn position: " + this.material.uniforms.uLastSpawnObjectPosition.value.x + ", " + this.material.uniforms.uLastSpawnObjectPosition.value.y + ", " + this.material.uniforms.uLastSpawnObjectPosition.value.z);
-
     if (age > this.defaultUniforms.uLifetime) {
-        console.log("SPAWN!!");
 /*
         for (let i = 0; i < count; i++) {
     

@@ -70,6 +70,7 @@ class App {
       .onChange(() => {
         this.shader = shaders[selectedMaterial.position];
         this.mesh.material = this.shader.material;
+        this.mesh.geometry = this.shader.geometry;
       });
     
     // Arrays of geometries and shaders

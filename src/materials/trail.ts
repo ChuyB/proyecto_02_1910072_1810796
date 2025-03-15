@@ -17,11 +17,11 @@ export class Trail {
     this.defaultUniforms = {
       uSize: 2.0,
       uTime: 0.0,
-      uSpeed: 10.0,
-      uObjectSize: 0.5,
+      uSpeed: 2.0,
+      uParticleSize: 0.5,
       uObjectPosition: new THREE.Vector3(0, 0, 0),
-      uLifetime: 5.0,
-      uSpawnRadius: 5.0,
+      uLifetime: 0.02,
+      uSpawnRadius: 0.01,
       uLastSpawnTime: 0.0,
     };
 
@@ -45,7 +45,7 @@ export class Trail {
         uTime: { value: this.defaultUniforms.uTime },
         uSize: { value: this.defaultUniforms.uSize },
         uSpeed: { value: this.defaultUniforms.uSpeed },
-        uObjectSize: { value: this.defaultUniforms.uObjectSize },
+        uParticleSize: { value: this.defaultUniforms.uObjectSize },
         uObjectPosition: { value: this.defaultUniforms.uObjectPosition },
         uLifetime: { value: this.defaultUniforms.uLifetime },
         uSpawnRadius: { value: this.defaultUniforms.uSpawnRadius },
@@ -60,22 +60,25 @@ export class Trail {
   }
 
   private createGeometry() {
-    const count = 1000;
+    const count = 100000;
     const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-        positions[i * 3] = this.defaultUniforms.uObjectPosition.x +
-        (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius * 2;
-  
-        positions[i * 3 + 1] = this.defaultUniforms.uObjectPosition.y +
-        (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius* 2;
-  
-        positions[i * 3 + 2] = this.defaultUniforms.uObjectPosition.z + 
-        (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius * 2;
+        const r = Math.random() * this.defaultUniforms.uSpawnRadius; // Random radius
+        const theta = Math.random() * Math.PI * 2; // Random angle in XY plane
+        const phi = Math.acos(2 * Math.random() - 1); // Random angle from Z-axis
+
+        positions[i * 3] = this.defaultUniforms.uObjectPosition.x + r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = this.defaultUniforms.uObjectPosition.y + r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = this.defaultUniforms.uObjectPosition.z + r * Math.cos(phi);
+        
+        sizes[i] = Math.random() * 1.5 + 1;
 
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
 
     return geometry;
   }
@@ -133,9 +136,9 @@ export class Trail {
     const uniforms = this.defaultUniforms;
     const shaderFolder = this.gui.addFolder("Trail");
     shaderFolder
-      .add(uniforms, "uSize", 0.1, 10.0)
-      .name("Size")
-      .onChange(() => (this.material.uniforms.uSize.value = uniforms.uSize));
+      .add(uniforms, "uParticleSize", 0.1, 10.0)
+      .name("Particle size")
+      .onChange(() => (this.material.uniforms.uParticleSize.value = uniforms.uParticleSize));
     shaderFolder
       .add(uniforms, "uSpeed", 0.1, 50.0)
       .name("Speed")

@@ -3,32 +3,40 @@ import GUI from "lil-gui";
 
 import vertexShader from "../shaders/rain/vertex.glsl";
 import fragmentShader from "../shaders/rain/fragment.glsl";
+import ParticleEmitter from "./particleEmitter";
 
-export class Rain {
+export class Smoke {
   private camera: THREE.PerspectiveCamera;
   private gui: GUI;
   private defaultUniforms: any;
   material: THREE.RawShaderMaterial;
+  emitter: THREE.Object3D;
   geometry: THREE.BufferGeometry;
 
   constructor(camera: THREE.PerspectiveCamera, gui: GUI) {
     this.camera = camera;
 
     this.defaultUniforms = {
-      uSize: 2.0,
+      uSize: 4.0,
       uTime: 0.0,
-      uSpeed: 10.0,
-      uMaxHeight: 25.0,
-      uMinHeight: -25.0,
+      uSpeed: 0.5,
+      uMaxHeight: 2.5,
+      uRotationSpeed: 1.0,
     };
 
     this.material = this.createMaterial();
-    this.geometry = this.createGeometry();
+    this.emitter = new THREE.Object3D();
+    this.emitter.position.set(0, 0, 0);
+    let particleEmitter = new ParticleEmitter(this.emitter, 100);
+    this.geometry = particleEmitter.geometry;
     this.gui = gui;
     this.addUIControls();
   }
 
   private createMaterial() {
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.setPath("src/textures/");
+
     let material = new THREE.RawShaderMaterial({
       vertexShader,
       fragmentShader,
@@ -39,32 +47,19 @@ export class Rain {
         uResolution: {
           value: new THREE.Vector2(window.innerWidth, window.innerHeight),
         },
+        uTexture: { value: textureLoader.load("smoke.png") },
         uTime: { value: this.defaultUniforms.uTime },
         uSize: { value: this.defaultUniforms.uSize },
         uSpeed: { value: this.defaultUniforms.uSpeed },
         uMaxHeight: { value: this.defaultUniforms.uMaxHeight },
-        uMinHeight: { value: this.defaultUniforms.uMinHeight },
+        uRotationSpeed: { value: this.defaultUniforms.uRotationSpeed },
       },
+      blending: THREE.NormalBlending,
+      depthWrite: false,
+      transparent: true,
       glslVersion: THREE.GLSL3,
     });
     return material;
-  }
-
-  private createGeometry() {
-    const count = 10000;
-    const sizes = new Float32Array(count);
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 50;
-      positions[i * 3 + 1] = Math.random() * (this.defaultUniforms.uMaxHeight - this.defaultUniforms.uMinHeight);
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 50;
-
-      sizes[i] = Math.random() * 1.5 + 1;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-    return geometry;
   }
 
   updateTime(time: number) {
@@ -73,14 +68,28 @@ export class Rain {
 
   private addUIControls() {
     const uniforms = this.defaultUniforms;
-    const shaderFolder = this.gui.addFolder("Rain");
+    const shaderFolder = this.gui.addFolder("Smoke");
     shaderFolder
       .add(uniforms, "uSize", 0.1, 10.0)
       .name("Size")
       .onChange(() => (this.material.uniforms.uSize.value = uniforms.uSize));
     shaderFolder
-      .add(uniforms, "uSpeed", 0.1, 50.0)
+      .add(uniforms, "uSpeed", 0.05, 3.0)
       .name("Speed")
       .onChange(() => (this.material.uniforms.uSpeed.value = uniforms.uSpeed));
+    shaderFolder
+      .add(uniforms, "uMaxHeight", 1.0, 10.0)
+      .name("Max height")
+      .onChange(
+        () => (this.material.uniforms.uMaxHeight.value = uniforms.uMaxHeight),
+      );
+    shaderFolder
+      .add(uniforms, "uRotationSpeed", 0.1, 5.0)
+      .name("Rotation speed")
+      .onChange(
+        () =>
+          (this.material.uniforms.uRotationSpeed.value =
+            uniforms.uRotationSpeed),
+      );
   }
 }

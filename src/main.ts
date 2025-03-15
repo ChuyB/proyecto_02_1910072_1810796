@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
-import { Rain } from "./materials/rain";
 import { Trail } from "./materials/trail";
+import { Smoke } from "./materials/smoke";
 
 class App {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
-  private shader;
   private mesh: THREE.Points;
+  private shader: Smoke | Trail;
   private clock: THREE.Clock;
   private controls: OrbitControls;
 
@@ -63,7 +63,7 @@ class App {
     const selectedMaterial = { position: 0 };
     folder
       .add(selectedMaterial, "position", {
-        Rain: 0,
+        Smoke: 0,
         Trail: 1,
       })
       .name("Particle system")
@@ -74,10 +74,10 @@ class App {
       });
     
     // Arrays of geometries and shaders
-    const rain = new Rain(this.camera, gui);
+    const smoke = new Smoke(this.camera, gui);
     const trail = new Trail(this.camera, gui);
-    const shaders = [rain,trail];
-
+    const shaders = [smoke,trail];
+    
     this.shader = shaders[selectedMaterial.position];
     this.mesh = new THREE.Points(this.shader.geometry, this.shader.material);
     this.scene.add(this.mesh);

@@ -1,11 +1,13 @@
 precision mediump float;
 
-uniform float uTime;
+uniform sampler2D uTexture;
+ 
+in float vAlpha;
+in vec3 vPosition;
 
 out vec4 fragColor;
 
 void main() {
-  vec3 color = vec3(0.0, 0.0, 0.8);
-  
-  fragColor = vec4(color, 1.0);
+  vec4 texColor = texture(uTexture, gl_PointCoord);
+  fragColor = vec4(texColor.rgb, texColor.a * vAlpha);
 }

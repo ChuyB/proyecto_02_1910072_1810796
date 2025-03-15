@@ -37,11 +37,11 @@ void main() {
   
   vec3 newPosition = position;
 
-  float age = uTime - uLastSpawnTime;
+  float age = uTime - startTime;
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
     
-  newPosition = spherePosition + uLastSpawnObjectPosition ;
-  newPosition.y -= uSpeed * (uTime - uLastSpawnTime);
+  newPosition = spherePosition + uLastSpawnObjectPosition;
+  newPosition.y -= uSpeed * (uTime - startTime);
 
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);

@@ -90,37 +90,23 @@ export class Trail {
 
   updateTime(time: number) {
     this.material.uniforms.uTime.value = time;
-    const age = time - this.material.uniforms.uLastSpawnTime.value;
-    // this.material.uniforms.uObjectPosition.value.copy(objectPosition);
+    
+    const systemAge = time - this.material.uniforms.uLastSpawnTime.value;
+    const startTimes = this.geometry.attributes.startTime.array;
+    const count = this.geometry.attributes.startTime.count;
 
-    // Needed to reset the particles at spawn
-    //const positions = this.geometry.attributes.position.array;
-    //const count = positions.length/3;
-
-    if (age > this.defaultUniforms.uLifetime) {
-/*
-        for (let i = 0; i < count; i++) {
-    
-          // Reset particle position
-          positions[i * 3] =
-            this.defaultUniforms.uObjectPosition.x +
-            (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius * 2;
-    
-          positions[i * 3 + 1] =
-            this.defaultUniforms.uObjectPosition.y +
-            (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius * 2;
-    
-          positions[i * 3 + 2] =
-            this.defaultUniforms.uObjectPosition.z +
-            (Math.random() - 0.5) * this.defaultUniforms.uSpawnRadius * 2;
-            
-        }      
-*/
-        this.material.uniforms.uLastSpawnTime.value = time;
-        this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
+    for (let i = 0; i < count; i++) {
+      if (time - startTimes[i] > this.defaultUniforms.uLifetime) {
+        startTimes[i] = time + Math.random() * this.material.uniforms.uLifetime.value;
       }
-      // Mark attributes as needing an update
-      //this.geometry.attributes.position.needsUpdate = true;
+    }
+    this.geometry.attributes.startTime.needsUpdate = true;
+    
+    if (systemAge > this.defaultUniforms.uLifetime) {
+
+      this.material.uniforms.uLastSpawnTime.value = time;
+      this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
+    }
 
   }
 

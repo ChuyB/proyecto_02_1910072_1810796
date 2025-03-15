@@ -15,6 +15,8 @@ uniform float uLifetime;
 uniform float uSpawnRadius;
 uniform vec3 uLastSpawnObjectPosition;
 uniform float uLastSpawnTime;
+uniform vec3 uPreviousSpawnPosition;
+uniform vec3 uCurrentSpawnPosition;
 
 out vec4 vPosition;
 out float vAge;
@@ -40,9 +42,16 @@ void main() {
 
   float age = uTime - startTime;
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
+
+
+  //Position Interpolation
+  float t = clamp(age / uLifetime, 0.0, 1.0);
+  vec3 interpolatedSpawnPosition = mix(uPreviousSpawnPosition, uCurrentSpawnPosition, t);
+
+  
     
   newPosition = spherePosition + uLastSpawnObjectPosition;
-  newPosition.y -= uSpeed * (uTime - startTime);
+  newPosition.y -= uSpeed * (uTime - uLastSpawnTime);
 
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);

@@ -1,6 +1,5 @@
 precision mediump float;
 
-in vec4 vPosition;
 in float vAge;
 
 uniform float uTime;

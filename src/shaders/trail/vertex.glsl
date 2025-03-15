@@ -1,9 +1,12 @@
 precision mediump float;
 
 in vec3 position;
-in vec3 spawnPosition;
 in float size;
 in float startTime;
+
+in vec3 spawnPosition;
+in vec3 prevSpawnPosition;
+uniform bool uInterpolateSpawnPosition;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelMatrix;
@@ -14,12 +17,8 @@ uniform float uParticleSize;
 uniform float uSpeed;
 uniform float uLifetime;
 uniform float uSpawnRadius;
-uniform vec3 uLastSpawnObjectPosition;
 uniform float uLastSpawnTime;
-uniform vec3 uPreviousSpawnPosition;
-uniform vec3 uCurrentSpawnPosition;
 
-out vec4 vPosition;
 out float vAge;
 
 // Function to generate a random point in a sphere for dynamic radius updating
@@ -37,6 +36,19 @@ vec3 sphereRadius(vec3 seed, float radius){
     );
 }
 
+// Function to calculate interpolated spawn position
+vec3 calculateInterpolatedSpawnPosition(vec3 prevSpawnPosition, vec3 spawnPosition, vec3 spherePosition, bool interpolate) {
+    if (interpolate) {
+        float totalDistance = distance(prevSpawnPosition, spawnPosition);
+        float currentDistance = distance(prevSpawnPosition, spherePosition);
+
+        float t = clamp(currentDistance / totalDistance, 0.0, 1.0);
+
+        return mix(prevSpawnPosition, spawnPosition, t);
+    }
+    return spawnPosition;
+}
+
 void main() {
   
   vec3 newPosition = position;
@@ -44,17 +56,19 @@ void main() {
   float age = uTime - startTime;
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
 
+  // Interpolate spawn position if enabled
+  vec3 localSpawnPosition = calculateInterpolatedSpawnPosition(
+    prevSpawnPosition, spawnPosition, 
+    spherePosition, uInterpolateSpawnPosition);
 
-  newPosition = spherePosition + spawnPosition;
+  newPosition = spherePosition + localSpawnPosition;
   if (uTime >= startTime){
     newPosition.y -= uSpeed * age;
   }
 
-
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
 
-  vPosition = projectionMatrix * viewMatrix * modelPosition;
+  gl_Position = projectionMatrix * viewMatrix * modelPosition;
   vAge = age;
-  gl_Position = vPosition;
   gl_PointSize = uParticleSize * size;
 }

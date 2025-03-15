@@ -20,10 +20,10 @@ export class Trail {
       uSpeed: 2.0,
       uParticleSize: 0.5,
       uObjectPosition: new THREE.Vector3(0, 0, 0),
-      uLifetime: 0.2,
-      uSpawnRadius: 0.01,
+      uLifetime: 0.5,
+      uSpawnRadius: 0.05,
+      uInterpolateSpawnPosition: false,
       uLastSpawnTime: 0.0,
-      uLastSpawnObjectPosition: new THREE.Vector3(0, 0, 0),
     };
 
     this.material = this.createMaterial();
@@ -50,6 +50,7 @@ export class Trail {
         uObjectPosition: { value: this.defaultUniforms.uObjectPosition },
         uLifetime: { value: this.defaultUniforms.uLifetime },
         uSpawnRadius: { value: this.defaultUniforms.uSpawnRadius },
+        uInterpolateSpawnPosition: { value: this.defaultUniforms.uInterpolateSpawnPosition },
         uLastSpawnTime: { value: this.defaultUniforms.uLastSpawnTime },
         uLastSpawnObjectPosition: { value: this.defaultUniforms.uLastSpawnObjectPosition },
       },
@@ -67,8 +68,11 @@ export class Trail {
     const sizes = new Float32Array(count);
     const startTimes = new Float32Array(count);
     const spawnPositions = new Float32Array(count * 3);
+    const prevSpawnPositions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
+
+      // Spawns particle in spherical shape
         const r = Math.random() * this.defaultUniforms.uSpawnRadius; // Random radius
         const theta = Math.random() * Math.PI * 2; // Random angle in XY plane
         const phi = Math.acos(2 * Math.random() - 1); // Random angle from Z-axis
@@ -85,12 +89,17 @@ export class Trail {
         spawnPositions[i * 3 + 1] = positions[i * 3 + 1];
         spawnPositions[i * 3 + 2] = positions[i * 3 + 2];
 
+        prevSpawnPositions[i * 3] = positions[i * 3];
+        prevSpawnPositions[i * 3 + 1] = positions[i * 3 + 1];
+        prevSpawnPositions[i * 3 + 2] = positions[i * 3 + 2];
+
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute("startTime", new THREE.BufferAttribute(startTimes, 1));
     geometry.setAttribute("spawnPosition", new THREE.BufferAttribute(spawnPositions, 3));
+    geometry.setAttribute("prevSpawnPosition", new THREE.BufferAttribute(prevSpawnPositions, 3));
 
     return geometry;
   }
@@ -98,31 +107,40 @@ export class Trail {
   updateTime(time: number) {
     this.material.uniforms.uTime.value = time;
     
-    const systemAge = time - this.material.uniforms.uLastSpawnTime.value;
     const startTimes = this.geometry.attributes.startTime.array;
     const spawnPositions = this.geometry.attributes.spawnPosition.array as Float32Array;
+    const prevSpawnPositions = this.geometry.attributes.prevSpawnPosition.array as Float32Array;
     const count = this.geometry.attributes.startTime.count;
+    
+    // Copy current spawn positions into prevSpawnPositions BEFORE updating spawnPositions
+    if (this.material.uniforms.uInterpolateSpawnPosition.value) {
+      for (let i = 0; i < count * 3; i++) {
+        prevSpawnPositions[i] = spawnPositions[i];
+      }
+      
+      this.geometry.attributes.prevSpawnPosition.needsUpdate = true;
+      
+    }
 
     for (let i = 0; i < count; i++) {
       if (time - startTimes[i] > this.defaultUniforms.uLifetime) {
         startTimes[i] = time + Math.random() * this.material.uniforms.uLifetime.value;
-      
+        
         // Update spawn position to the current object position
         spawnPositions[i * 3] = this.defaultUniforms.uObjectPosition.x;
         spawnPositions[i * 3 + 1] = this.defaultUniforms.uObjectPosition.y;
         spawnPositions[i * 3 + 2] = this.defaultUniforms.uObjectPosition.z;
-      
+        
       }
     }
+    
     this.geometry.attributes.startTime.needsUpdate = true;
     this.geometry.attributes.spawnPosition.needsUpdate = true;
     
+    const systemAge = time - this.material.uniforms.uLastSpawnTime.value;
     if (systemAge > this.defaultUniforms.uLifetime) {
-
       this.material.uniforms.uLastSpawnTime.value = time;
-
     }
-    this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
 
   }
 
@@ -144,7 +162,7 @@ export class Trail {
     const uniforms = this.defaultUniforms;
     const shaderFolder = this.gui.addFolder("Trail");
     shaderFolder
-      .add(uniforms, "uParticleSize", 0.1, 10.0)
+      .add(uniforms, "uParticleSize", 0.01, 5.0)
       .name("Particle size")
       .onChange(() => (this.material.uniforms.uParticleSize.value = uniforms.uParticleSize));
     shaderFolder
@@ -152,14 +170,21 @@ export class Trail {
       .name("Speed")
       .onChange(() => (this.material.uniforms.uSpeed.value = uniforms.uSpeed));
     shaderFolder
-        .add(uniforms, "uLifetime", 0.1, 50.0)
+        .add(uniforms, "uLifetime", 0.1, 20.0)
         .name("Life time")
         .onChange(() => (this.material.uniforms.uLifetime.value = uniforms.uLifetime));
     shaderFolder
-        .add(uniforms, "uSpawnRadius", 0.01, 50.0)
+        .add(uniforms, "uSpawnRadius", 0.001, 2.0)
         .name("Spawn radius")
         .onChange(() => (
             this.material.uniforms.uSpawnRadius.value = uniforms.uSpawnRadius
+        ));
+    // Doesnt work as intended
+        shaderFolder
+        .add(uniforms, "uInterpolateSpawnPosition")
+        .name("Interpolate spawn position? (bugged)")
+        .onChange(() => (
+            this.material.uniforms.uInterpolateSpawnPosition.value = uniforms.uInterpolateSpawnPosition
         ));
   }
 }

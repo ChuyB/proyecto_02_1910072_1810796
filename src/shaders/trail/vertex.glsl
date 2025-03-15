@@ -17,6 +17,7 @@ uniform vec3 uLastSpawnObjectPosition;
 uniform float uLastSpawnTime;
 
 out vec4 vPosition;
+out float vAge;
 
 // Function to generate a random point in a sphere for dynamic radius updating
 vec3 sphereRadius(vec3 seed, float radius){
@@ -45,8 +46,9 @@ void main() {
 
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
+
   vPosition = projectionMatrix * viewMatrix * modelPosition;
+  vAge = age;
   gl_Position = vPosition;
-  
   gl_PointSize = uParticleSize * size;
 }

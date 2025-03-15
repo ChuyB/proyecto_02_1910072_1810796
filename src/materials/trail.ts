@@ -66,6 +66,7 @@ export class Trail {
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const startTimes = new Float32Array(count);
+    const spawnPositions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
         const r = Math.random() * this.defaultUniforms.uSpawnRadius; // Random radius
@@ -79,11 +80,17 @@ export class Trail {
         sizes[i] = Math.random() * 1.5 + 1;
         startTimes[i] = Math.random() * this.defaultUniforms.uLifetime;
 
+        // Initialize spawn positions to the current object position
+        spawnPositions[i * 3] = positions[i * 3]
+        spawnPositions[i * 3 + 1] = positions[i * 3 + 1];
+        spawnPositions[i * 3 + 2] = positions[i * 3 + 2];
+
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute("startTime", new THREE.BufferAttribute(startTimes, 1));
+    geometry.setAttribute("spawnPosition", new THREE.BufferAttribute(spawnPositions, 3));
 
     return geometry;
   }
@@ -93,20 +100,29 @@ export class Trail {
     
     const systemAge = time - this.material.uniforms.uLastSpawnTime.value;
     const startTimes = this.geometry.attributes.startTime.array;
+    const spawnPositions = this.geometry.attributes.spawnPosition.array as Float32Array;
     const count = this.geometry.attributes.startTime.count;
 
     for (let i = 0; i < count; i++) {
       if (time - startTimes[i] > this.defaultUniforms.uLifetime) {
         startTimes[i] = time + Math.random() * this.material.uniforms.uLifetime.value;
+      
+        // Update spawn position to the current object position
+        spawnPositions[i * 3] = this.defaultUniforms.uObjectPosition.x;
+        spawnPositions[i * 3 + 1] = this.defaultUniforms.uObjectPosition.y;
+        spawnPositions[i * 3 + 2] = this.defaultUniforms.uObjectPosition.z;
+      
       }
     }
     this.geometry.attributes.startTime.needsUpdate = true;
+    this.geometry.attributes.spawnPosition.needsUpdate = true;
     
     if (systemAge > this.defaultUniforms.uLifetime) {
 
       this.material.uniforms.uLastSpawnTime.value = time;
-      this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
+
     }
+    this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
 
   }
 

@@ -1,6 +1,7 @@
 precision mediump float;
 
 in vec3 position;
+in vec3 spawnPosition;
 in float size;
 in float startTime;
 
@@ -44,14 +45,10 @@ void main() {
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
 
 
-  //Position Interpolation
-  float t = clamp(age / uLifetime, 0.0, 1.0);
-  vec3 interpolatedSpawnPosition = mix(uPreviousSpawnPosition, uCurrentSpawnPosition, t);
-
-  
-    
-  newPosition = spherePosition + uLastSpawnObjectPosition;
-  newPosition.y -= uSpeed * (uTime - uLastSpawnTime);
+  newPosition = spherePosition + spawnPosition;
+  if (uTime >= startTime){
+    newPosition.y -= uSpeed * age;
+  }
 
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);

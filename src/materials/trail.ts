@@ -20,9 +20,10 @@ export class Trail {
       uSpeed: 2.0,
       uParticleSize: 0.5,
       uObjectPosition: new THREE.Vector3(0, 0, 0),
-      uLifetime: 0.02,
+      uLifetime: 0.2,
       uSpawnRadius: 0.01,
       uLastSpawnTime: 0.0,
+      uLastSpawnObjectPosition: new THREE.Vector3(0, 0, 0),
     };
 
     this.material = this.createMaterial();
@@ -50,6 +51,7 @@ export class Trail {
         uLifetime: { value: this.defaultUniforms.uLifetime },
         uSpawnRadius: { value: this.defaultUniforms.uSpawnRadius },
         uLastSpawnTime: { value: this.defaultUniforms.uLastSpawnTime },
+        uLastSpawnObjectPosition: { value: this.defaultUniforms.uLastSpawnObjectPosition },
       },
       glslVersion: THREE.GLSL3,
       transparent: true, // Enable transparency
@@ -92,7 +94,11 @@ export class Trail {
     //const positions = this.geometry.attributes.position.array;
     //const count = positions.length/3;
 
+    console.log("Position: " + this.material.uniforms.uObjectPosition.value.x + ", " + this.material.uniforms.uObjectPosition.value.y + ", " + this.material.uniforms.uObjectPosition.value.z);
+    console.log("Last spawn position: " + this.material.uniforms.uLastSpawnObjectPosition.value.x + ", " + this.material.uniforms.uLastSpawnObjectPosition.value.y + ", " + this.material.uniforms.uLastSpawnObjectPosition.value.z);
+
     if (age > this.defaultUniforms.uLifetime) {
+        console.log("SPAWN!!");
 /*
         for (let i = 0; i < count; i++) {
     
@@ -112,6 +118,7 @@ export class Trail {
         }      
 */
         this.material.uniforms.uLastSpawnTime.value = time;
+        this.material.uniforms.uLastSpawnObjectPosition.value = this.material.uniforms.uObjectPosition.value.clone();
       }
       // Mark attributes as needing an update
       //this.geometry.attributes.position.needsUpdate = true;
@@ -148,11 +155,10 @@ export class Trail {
         .name("Life time")
         .onChange(() => (this.material.uniforms.uLifetime.value = uniforms.uLifetime));
     shaderFolder
-        .add(uniforms, "uSpawnRadius", 0.1, 50.0)
+        .add(uniforms, "uSpawnRadius", 0.01, 50.0)
         .name("Spawn radius")
-        .onChange(() => {
-            console.log("uSpawnRadius", uniforms.uSpawnRadius);
+        .onChange(() => (
             this.material.uniforms.uSpawnRadius.value = uniforms.uSpawnRadius
-        });
+        ));
   }
 }

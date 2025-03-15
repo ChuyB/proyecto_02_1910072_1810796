@@ -10,10 +10,10 @@ uniform mat4 normalMatrix;
 uniform float uTime;
 uniform float uParticleSize;
 uniform float uSpeed;
-uniform vec3 uObjectPosition;
 uniform float uLifetime;
 uniform float uSpawnRadius;
 uniform float uLastSpawnTime;
+uniform vec3 uLastSpawnObjectPosition;
 
 out vec4 vPosition;
 
@@ -37,13 +37,19 @@ void main() {
   vec3 newPosition = position;
 
   float age = uTime - uLastSpawnTime;
+  vec3 spherePosition = sphereRadius(position, uSpawnRadius);
   if (age < uLifetime * 0.5) {
-  newPosition = uObjectPosition + sphereRadius(newPosition, uSpawnRadius);
-  } else {
-  newPosition = sphereRadius(newPosition, uSpawnRadius);
+    newPosition = spherePosition + uLastSpawnObjectPosition ;
+  }
+  if (age >= uLifetime * 0.5 && age < uLifetime * 0.6) {
+    newPosition = spherePosition  + uLastSpawnObjectPosition;
+  }
+  else {
+    newPosition =  spherePosition + uLastSpawnObjectPosition;
   }
 
-  newPosition.y -= uSpeed*age;
+  newPosition.y -= uSpeed * (uTime - uLastSpawnTime);
+
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
   vPosition = projectionMatrix * viewMatrix * modelPosition;

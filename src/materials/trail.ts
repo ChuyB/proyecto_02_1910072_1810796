@@ -65,6 +65,7 @@ export class Trail {
     const count = 100000;
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
+    const startTimes = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
         const r = Math.random() * this.defaultUniforms.uSpawnRadius; // Random radius
@@ -76,11 +77,13 @@ export class Trail {
         positions[i * 3 + 2] = this.defaultUniforms.uObjectPosition.z + r * Math.cos(phi);
         
         sizes[i] = Math.random() * 1.5 + 1;
+        startTimes[i] = Math.random() * this.defaultUniforms.uLifetime;
 
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute("startTime", new THREE.BufferAttribute(startTimes, 1));
 
     return geometry;
   }

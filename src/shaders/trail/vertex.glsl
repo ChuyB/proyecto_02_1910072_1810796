@@ -2,6 +2,7 @@ precision mediump float;
 
 in vec3 position;
 in float size;
+in float startTime;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelMatrix;
@@ -12,8 +13,8 @@ uniform float uParticleSize;
 uniform float uSpeed;
 uniform float uLifetime;
 uniform float uSpawnRadius;
-uniform float uLastSpawnTime;
 uniform vec3 uLastSpawnObjectPosition;
+uniform float uLastSpawnTime;
 
 out vec4 vPosition;
 
@@ -38,16 +39,8 @@ void main() {
 
   float age = uTime - uLastSpawnTime;
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
-  if (age < uLifetime * 0.5) {
-    newPosition = spherePosition + uLastSpawnObjectPosition ;
-  }
-  if (age >= uLifetime * 0.5 && age < uLifetime * 0.6) {
-    newPosition = spherePosition  + uLastSpawnObjectPosition;
-  }
-  else {
-    newPosition =  spherePosition + uLastSpawnObjectPosition;
-  }
-
+    
+  newPosition = spherePosition + uLastSpawnObjectPosition ;
   newPosition.y -= uSpeed * (uTime - uLastSpawnTime);
 
 

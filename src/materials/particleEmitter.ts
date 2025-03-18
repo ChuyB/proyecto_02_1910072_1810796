@@ -58,7 +58,7 @@ export default class ParticleEmitter {
 
     let x = Math.cos(angle) * distance;
     let z = Math.sin(angle) * distance;
-    let y = Math.random();
+    let y = Math.random() * 5;
 
     // Set particle position in the positions array
     this.positions[index * 3] = this.object.position.x + x;

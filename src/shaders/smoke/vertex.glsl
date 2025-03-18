@@ -22,10 +22,10 @@ out float vAlpha;
 out vec3 vPosition;
 
 void main() {
-  float maxHeight = position.y + uMaxHeight;
+  float maxHeight = uMaxHeight*0.5;
 
   vec3 dynamicPosition = position;
-  dynamicPosition.y = maxHeight - mod(maxHeight - (position.y + uSpeed * uTime), maxHeight);
+  dynamicPosition.y = maxHeight - mod(maxHeight - (position.y + (uSpeed * uTime)), maxHeight);
 
   float rotationAngle = angle * uTime * uRotationSpeed;
   float cosAngle = cos(rotationAngle);

@@ -44,10 +44,9 @@ class App {
     if (!this.renderer.capabilities.isWebGL2) {
       console.warn("WebGL 2.0 is not available on this browser.");
     }
+    this.renderer.shadowMap.enabled = true;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
-
-    // const resolution = new THREE.Vector2(window.innerWidth, window.innerHeight);
 
     // Creates orbit controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -68,9 +67,11 @@ class App {
       })
       .name("Particle system")
       .onChange(() => {
+        this.scene.remove(this.shader.emitter);
         this.shader = shaders[selectedMaterial.position];
         this.mesh.material = this.shader.material;
         this.mesh.geometry = this.shader.geometry;
+        this.scene.add(this.shader.emitter);
       });
     
     // Arrays of geometries and shaders
@@ -79,8 +80,16 @@ class App {
     const shaders = [smoke,trail];
     
     this.shader = shaders[selectedMaterial.position];
+    this.scene.add(this.shader.emitter);
     this.mesh = new THREE.Points(this.shader.geometry, this.shader.material);
     this.scene.add(this.mesh);
+
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff);
+    const sun = new THREE.DirectionalLight(0xffffff, 10);
+    sun.position.set(0, 1, 1);
+    this.scene.add(ambientLight);
+    this.scene.add(sun);
 
     // Initialize
     this.onWindowResize();

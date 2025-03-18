@@ -10,6 +10,7 @@ export class Trail {
   private defaultUniforms: any;
   material: THREE.RawShaderMaterial;
   geometry: THREE.BufferGeometry;
+  emitter = new THREE.Object3D();
 
   constructor(camera: THREE.PerspectiveCamera, gui: GUI) {
     this.camera = camera;

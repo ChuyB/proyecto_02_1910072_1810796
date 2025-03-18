@@ -14,12 +14,17 @@ uniform mat4 viewMatrix;
 uniform mat4 normalMatrix;
 uniform float uTime;
 uniform float uParticleSize;
-uniform float uSpeed;
+uniform vec2 uInitialSpeed;
+uniform vec2 uInitialForce;
+uniform float uForceApplicationTime;
 uniform float uLifetime;
 uniform float uSpawnRadius;
-uniform float uLastSpawnTime;
+uniform float uLastSpawnTime; 
+
+uniform float uPostCorrection;
 
 out float vAge;
+out float vStartTime;
 
 // Function to generate a random point in a sphere for dynamic radius updating
 vec3 sphereRadius(vec3 seed, float radius){
@@ -36,19 +41,6 @@ vec3 sphereRadius(vec3 seed, float radius){
     );
 }
 
-// Function to calculate interpolated spawn position
-vec3 calculateInterpolatedSpawnPosition(vec3 prevSpawnPosition, vec3 spawnPosition, vec3 spherePosition, bool interpolate) {
-    if (interpolate) {
-        float totalDistance = distance(prevSpawnPosition, spawnPosition);
-        float currentDistance = distance(prevSpawnPosition, spherePosition);
-
-        float t = clamp(currentDistance / totalDistance, 0.0, 1.0);
-
-        return mix(prevSpawnPosition, spawnPosition, t);
-    }
-    return spawnPosition;
-}
-
 void main() {
   
   vec3 newPosition = position;
@@ -56,19 +48,33 @@ void main() {
   float age = uTime - startTime;
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
 
-  // Interpolate spawn position if enabled
-  vec3 localSpawnPosition = calculateInterpolatedSpawnPosition(
-    prevSpawnPosition, spawnPosition, 
-    spherePosition, uInterpolateSpawnPosition);
+  // Calculate acceleration (a = F / m) (we associate mass to particle size)
+  vec2 acceleration = uInitialForce / size;
 
-  newPosition = spherePosition + localSpawnPosition;
+  // Apply acceleration to speed if applies
+  vec2 speed = uInitialSpeed;
+  if (uTime >= startTime && uTime <= startTime + uForceApplicationTime) {
+    float timeInForceWindow = uTime - startTime;
+    speed += acceleration * timeInForceWindow;
+
+  } else if (uTime > startTime + uForceApplicationTime) {
+     // After the force application window, apply exponential decay to the force
+    float timeSinceForceEnd = uTime - (startTime + uForceApplicationTime);
+    vec2 decayedForce = uInitialForce * exp(-uPostCorrection * timeSinceForceEnd);
+    vec2 decayedAcceleration = decayedForce / size;
+    speed += decayedAcceleration * uForceApplicationTime;
+    
+  }
+
+  newPosition = spherePosition + spawnPosition;
   if (uTime >= startTime){
-    newPosition.y -= uSpeed * age;
+    newPosition.xy -= speed * age;
   }
 
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
 
   gl_Position = projectionMatrix * viewMatrix * modelPosition;
   vAge = age;
+  vStartTime = startTime;
   gl_PointSize = uParticleSize * size;
 }

@@ -18,13 +18,16 @@ export class Trail {
     this.defaultUniforms = {
       uSize: 2.0,
       uTime: 0.0,
-      uSpeed: 2.0,
+      uInitialSpeed: new THREE.Vector2(0.0, 2.0),
+      uInitialForce: new THREE.Vector2(0.0, 0.0),
+      uForceApplicationTime: 0.5,
+      uPostCorrection: 1.0,
       uParticleSize: 0.5,
       uObjectPosition: new THREE.Vector3(0, 0, 0),
       uLifetime: 0.5,
       uSpawnRadius: 0.05,
-      uInterpolateSpawnPosition: false,
       uLastSpawnTime: 0.0,
+      uColor: { r: 0.0, g: 0.5, b: 0.7 },
     };
 
     this.material = this.createMaterial();
@@ -46,14 +49,23 @@ export class Trail {
         },
         uTime: { value: this.defaultUniforms.uTime },
         uSize: { value: this.defaultUniforms.uSize },
-        uSpeed: { value: this.defaultUniforms.uSpeed },
+        uInitialSpeed: { value: this.defaultUniforms.uInitialSpeed },
+        uInitialForce: { value: this.defaultUniforms.uInitialForce},
+        uForceApplicationTime: { value: this.defaultUniforms.uForceApplicationTime},
         uParticleSize: { value: this.defaultUniforms.uObjectSize },
         uObjectPosition: { value: this.defaultUniforms.uObjectPosition },
         uLifetime: { value: this.defaultUniforms.uLifetime },
         uSpawnRadius: { value: this.defaultUniforms.uSpawnRadius },
-        uInterpolateSpawnPosition: { value: this.defaultUniforms.uInterpolateSpawnPosition },
         uLastSpawnTime: { value: this.defaultUniforms.uLastSpawnTime },
         uLastSpawnObjectPosition: { value: this.defaultUniforms.uLastSpawnObjectPosition },
+        uPostCorrection: { value: this.defaultUniforms.uPostCorrection},
+        uColor: {
+                  value: new THREE.Vector3(
+                    this.defaultUniforms.uColor.r,
+                    this.defaultUniforms.uColor.g,
+                    this.defaultUniforms.uColor.b,
+                  ),
+                },
       },
       glslVersion: THREE.GLSL3,
       transparent: true, // Enable transparency
@@ -110,19 +122,8 @@ export class Trail {
     
     const startTimes = this.geometry.attributes.startTime.array;
     const spawnPositions = this.geometry.attributes.spawnPosition.array as Float32Array;
-    const prevSpawnPositions = this.geometry.attributes.prevSpawnPosition.array as Float32Array;
     const count = this.geometry.attributes.startTime.count;
     
-    // Copy current spawn positions into prevSpawnPositions BEFORE updating spawnPositions
-    if (this.material.uniforms.uInterpolateSpawnPosition.value) {
-      for (let i = 0; i < count * 3; i++) {
-        prevSpawnPositions[i] = spawnPositions[i];
-      }
-      
-      this.geometry.attributes.prevSpawnPosition.needsUpdate = true;
-      
-    }
-
     for (let i = 0; i < count; i++) {
       if (time - startTimes[i] > this.defaultUniforms.uLifetime) {
         startTimes[i] = time + Math.random() * this.material.uniforms.uLifetime.value;
@@ -167,25 +168,70 @@ export class Trail {
       .name("Particle size")
       .onChange(() => (this.material.uniforms.uParticleSize.value = uniforms.uParticleSize));
     shaderFolder
-      .add(uniforms, "uSpeed", 0.1, 50.0)
-      .name("Speed")
-      .onChange(() => (this.material.uniforms.uSpeed.value = uniforms.uSpeed));
+      .add(uniforms, "uSpawnRadius", 0.001, 2.0) // Adjust the range as needed
+      .name("Spawn Radius")
+      .onChange(() => (this.material.uniforms.uSpawnRadius.value = uniforms.uSpawnRadius));
     shaderFolder
-        .add(uniforms, "uLifetime", 0.1, 20.0)
-        .name("Life time")
-        .onChange(() => (this.material.uniforms.uLifetime.value = uniforms.uLifetime));
+      .add(uniforms, "uLifetime", 0.1, 20.0)
+      .name("Life time")
+      .onChange(() => {
+        this.material.uniforms.uLifetime.value = uniforms.uLifetime;
+
+        // Ensure uForceApplicationTime is not greater than uLifetime
+        if (uniforms.uForceApplicationTime > uniforms.uLifetime) {
+            uniforms.uForceApplicationTime = uniforms.uLifetime;
+            this.material.uniforms.uForceApplicationTime.value = uniforms.uLifetime;
+            physicsFolder.controllers.forEach((controller) => {
+                if (controller.property === "uForceApplicationTime") {
+                    controller.updateDisplay(); // Update the GUI slider
+                }
+            });
+        }
+    });
     shaderFolder
-        .add(uniforms, "uSpawnRadius", 0.001, 2.0)
-        .name("Spawn radius")
-        .onChange(() => (
-            this.material.uniforms.uSpawnRadius.value = uniforms.uSpawnRadius
-        ));
-    // Doesnt work as intended
-        shaderFolder
-        .add(uniforms, "uInterpolateSpawnPosition")
-        .name("Interpolate spawn position? (bugged)")
-        .onChange(() => (
-            this.material.uniforms.uInterpolateSpawnPosition.value = uniforms.uInterpolateSpawnPosition
-        ));
+      .addColor(uniforms, "uColor")
+      .name("Color")
+      .onChange(() => {
+        this.material.uniforms.uColor.value = this.defaultUniforms.uColor;
+      });
+
+      const physicsFolder = shaderFolder.addFolder("Physics");
+        physicsFolder
+          .add(uniforms.uInitialSpeed, "x", -25.0, 25.0)
+          .name("Initial speed X")
+          .onChange(() => (this.material.uniforms.uInitialSpeed.value.x = uniforms.uInitialSpeed.x));
+        physicsFolder
+          .add(uniforms.uInitialSpeed, "y", -25.0, 25.0)
+          .name("Initial speed Y")
+          .onChange(() => (this.material.uniforms.uInitialSpeed.value.y = uniforms.uInitialSpeed.y));
+        physicsFolder
+          .add(uniforms.uInitialForce, "x", -25.0, 25.0)
+          .name("Initial force X")
+          .onChange(() => (this.material.uniforms.uInitialForce.value.x = uniforms.uInitialForce.x));
+        physicsFolder
+          .add(uniforms.uInitialForce, "y", -25.0, 25.0)
+          .name("Initial force Y")
+          .onChange(() => (this.material.uniforms.uInitialForce.value.y = uniforms.uInitialForce.y));
+        physicsFolder
+          .add(uniforms,"uForceApplicationTime", 0.1, 20.0)
+          .name("Force Application Time")
+          .onChange(() => {
+            // Ensure uForceApplicationTime is not greater than uLifetime
+            if (uniforms.uForceApplicationTime > uniforms.uLifetime) {
+                uniforms.uForceApplicationTime = uniforms.uLifetime;
+                this.material.uniforms.uForceApplicationTime.value = uniforms.uLifetime;
+                physicsFolder.controllers.forEach((controller) => {
+                    if (controller.property === "uForceApplicationTime") {
+                        controller.updateDisplay(); // Update the GUI slider
+                    }
+                });
+            } else {
+                this.material.uniforms.uForceApplicationTime.value = uniforms.uForceApplicationTime;
+            }
+          });
+        physicsFolder
+          .add(uniforms, "uPostCorrection", -5.0, 5.0)
+          .name("Post-Force Correction")
+          .onChange(() => (this.material.uniforms.uPostCorrection.value = uniforms.uPostCorrection));  
   }
 }

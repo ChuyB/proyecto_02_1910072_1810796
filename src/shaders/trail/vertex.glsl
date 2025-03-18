@@ -6,7 +6,6 @@ in float startTime;
 
 in vec3 spawnPosition;
 in vec3 prevSpawnPosition;
-uniform bool uInterpolateSpawnPosition;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelMatrix;
@@ -44,8 +43,17 @@ vec3 sphereRadius(vec3 seed, float radius){
 void main() {
   
   vec3 newPosition = position;
-
+  // Time since particle was last moved to an initial position
   float age = uTime - startTime;
+
+  // Cull particles that are not yet active (optimization)
+  // we still set placeholder values for size and position
+  if (uTime < startTime) {
+      gl_PointSize = 0.0; // Make the particle invisible
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // Move it off-screen
+      return;
+  }
+
   vec3 spherePosition = sphereRadius(position, uSpawnRadius);
 
   // Calculate acceleration (a = F / m) (we associate mass to particle size)
@@ -53,26 +61,26 @@ void main() {
 
   // Apply acceleration to speed if applies
   vec2 speed = uInitialSpeed;
-  if (uTime >= startTime && uTime <= startTime + uForceApplicationTime) {
+  if (uTime <= startTime + uForceApplicationTime) {
     float timeInForceWindow = uTime - startTime;
     speed += acceleration * timeInForceWindow;
 
   } else if (uTime > startTime + uForceApplicationTime) {
      // After the force application window, apply exponential decay to the force
+     // Preferred to let the decay factor be an uniform for manual tuning
     float timeSinceForceEnd = uTime - (startTime + uForceApplicationTime);
     vec2 decayedForce = uInitialForce * exp(-uPostCorrection * timeSinceForceEnd);
     vec2 decayedAcceleration = decayedForce / size;
+
     speed += decayedAcceleration * uForceApplicationTime;
-    
   }
 
+  // Locate the particle within a sphere and apply movement
   newPosition = spherePosition + spawnPosition;
-  if (uTime >= startTime){
-    newPosition.xy -= speed * age;
-  }
+  newPosition.xy += speed * age;
 
+  // Apply the changes
   vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
-
   gl_Position = projectionMatrix * viewMatrix * modelPosition;
   vAge = age;
   vStartTime = startTime;

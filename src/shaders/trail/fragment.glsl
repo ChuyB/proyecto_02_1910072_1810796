@@ -13,8 +13,8 @@ out vec4 fragColor;
 void main() {
     
     float alpha = 1.0 - (vAge / uLifetime); 
-    if (uTime < vStartTime){ // Hide particles that are not falling yet
-        alpha = 0.0;
+    if (uTime < vStartTime){ // Dont render particles that are not falling yet
+        discard;
     } else {
         alpha = clamp(alpha, 0.0, 1.0); // Fade out as age approaches lifetime
     }

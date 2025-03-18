@@ -18,7 +18,7 @@ export class Trail {
     this.defaultUniforms = {
       uSize: 2.0,
       uTime: 0.0,
-      uInitialSpeed: new THREE.Vector2(0.0, 2.0),
+      uInitialSpeed: new THREE.Vector2(0.0, -2.0),
       uInitialForce: new THREE.Vector2(0.0, 0.0),
       uForceApplicationTime: 0.5,
       uPostCorrection: 1.0,
@@ -108,6 +108,7 @@ export class Trail {
 
     }
     const geometry = new THREE.BufferGeometry();
+    // Attributes
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute("startTime", new THREE.BufferAttribute(startTimes, 1));
@@ -126,6 +127,7 @@ export class Trail {
     
     for (let i = 0; i < count; i++) {
       if (time - startTimes[i] > this.defaultUniforms.uLifetime) {
+        // Sets random startTimes for particle distribution
         startTimes[i] = time + Math.random() * this.material.uniforms.uLifetime.value;
         
         // Update spawn position to the current object position
@@ -147,7 +149,6 @@ export class Trail {
   }
 
   updateMouse(x: number, y: number) { 
-    // Scale the mouse coordinates based on the window dimensions
 
     const raycaster = new THREE.Raycaster();
 

@@ -26,10 +26,10 @@ export class PerlinNoise {
       uOctaves: 2,
       uPosition: { x: 0, y: 0, z: 0 },
       uClickTime: 0.0,
-      uWaveSpread: 10.0,
+      uWaveSpread: 6.0,
       uWaveSpeed: 10.0,
-      uWaveDissipation: 4.0,
-      uWaveForce: 0.2,
+      uWaveDissipation: 0.3,
+      uWaveForce: 0.35,
     };
 
     this.emitter = new THREE.Object3D();
@@ -76,13 +76,13 @@ export class PerlinNoise {
     return material;
   }
 
-  private createGeometry(numberOfParticles = 5000) {
+  private createGeometry(numberOfParticles = 20000) {
     const geometry = new THREE.BufferGeometry();
     let position = new Float32Array(3 * numberOfParticles);
     for (let i = 0; i < numberOfParticles; i++) {
-      position[i * 3] = (Math.random() - 0.5) * this.defaultUniforms.uSize;
-      position[i * 3 + 1] = (Math.random() - 0.5) * this.defaultUniforms.uSize;
-      position[i * 3 + 2] = 0;
+      position[i * 3] = (Math.random() - 0.5) * this.defaultUniforms.uSize * 10;
+      position[i * 3 + 1] = 0;
+      position[i * 3 + 2] = (Math.random() - 0.5) * this.defaultUniforms.uSize * 10;
     }
 
     geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
@@ -97,7 +97,7 @@ export class PerlinNoise {
   updateMouse(mouse: THREE.Vector2, time: number) {
     const rayCaster = new THREE.Raycaster();
     rayCaster.setFromCamera(mouse, this.camera);
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const intersection = new THREE.Vector3();
     rayCaster.ray.intersectPlane(plane, intersection);
 
@@ -123,11 +123,11 @@ export class PerlinNoise {
       .name("Wave Speed")
       .onChange(() => (this.material.uniforms.uWaveSpeed.value = uniforms.uWaveSpeed));
     shaderFolder
-      .add(uniforms, "uWaveSpread", 1.0, 20.0)
+      .add(uniforms, "uWaveSpread", 1.0, 15.0)
       .name("Wave Spread")
       .onChange(() => (this.material.uniforms.uWaveSpread.value = uniforms.uWaveSpread));
     shaderFolder
-      .add(uniforms, "uWaveDissipation", 0.0, 10.0)
+      .add(uniforms, "uWaveDissipation", 0.01, 2.0)
       .name("Wave Dissipation")
       .onChange(() => (this.material.uniforms.uWaveDissipation.value = uniforms.uWaveDissipation));
     shaderFolder

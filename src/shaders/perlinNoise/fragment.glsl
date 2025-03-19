@@ -94,7 +94,7 @@ void main() {
 
   vec3 color = vec3(0.0);
 
-  uv = uv * 4.0;
+  uv = uv * 1.0;
   float pNoise = perlinNoise(uv);
   color = vec3(pNoise);
 

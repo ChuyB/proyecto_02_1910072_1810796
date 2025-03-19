@@ -23,8 +23,8 @@ out vec2 vUv;
 void main() {
   vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-  vec2 center = uPosition.xy;
-  float distanceToCenter = length(modelPosition.xy - center);
+  vec2 center = uPosition.xz;
+  float distanceToCenter = length(modelPosition.xz - center);
 
   float elapsedTime = uTime - uClickTime;
 
@@ -34,10 +34,10 @@ void main() {
   if (elapsedTime < 2.0) {
     float wave = sin(distanceToCenter * uWaveSpread - elapsedTime * uWaveSpeed) * exp(-distanceToCenter * uWaveDissipation);
     wave *= (1.0 - damping); // Apply damping to the wave amplitude
-    modelPosition.z += wave * uWaveForce;
+    modelPosition.y += wave * uWaveForce;
   }
 
-  vUv = (modelPosition.xy / modelPosition.w) / uSize + 0.5; // Perspective
+  vUv = (modelPosition.xz / modelPosition.w) / uSize + 0.5; // Perspective
   vec4 mvPosition = viewMatrix * modelPosition;
   gl_Position = projectionMatrix * mvPosition;
   gl_PointSize = uSize;

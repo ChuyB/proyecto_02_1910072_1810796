@@ -24,6 +24,12 @@ export class PerlinNoise {
       uColor: { r: 0.4, g: 0.87, b: 0.68 },
       uAlpha: 1.0,
       uOctaves: 2,
+      uPosition: { x: 0, y: 0, z: 0 },
+      uClickTime: 0.0,
+      uWaveSpread: 10.0,
+      uWaveSpeed: 10.0,
+      uWaveDissipation: 4.0,
+      uWaveForce: 0.2,
     };
 
     this.emitter = new THREE.Object3D();
@@ -36,7 +42,6 @@ export class PerlinNoise {
   }
 
   private createMaterial() {
-
     let material = new THREE.RawShaderMaterial({
       vertexShader,
       fragmentShader,
@@ -59,6 +64,12 @@ export class PerlinNoise {
         },
         uAlpha: { value: this.defaultUniforms.uAlpha },
         uOctaves: { value: this.defaultUniforms.uOctaves },
+        uPosition: { value: this.defaultUniforms.uPosition },
+        uClickTime: { value: this.defaultUniforms.uClickTime },
+        uWaveSpread: { value: this.defaultUniforms.uWaveSpread },
+        uWaveSpeed: { value: this.defaultUniforms.uWaveSpeed },
+        uWaveDissipation: { value: this.defaultUniforms.uWaveDissipation },
+        uWaveForce: { value: this.defaultUniforms.uWaveForce },
       },
       glslVersion: THREE.GLSL3,
     });
@@ -83,13 +94,20 @@ export class PerlinNoise {
     this.material.uniforms.uTime.value = time;
   }
 
+  updateMouse(mouse: THREE.Vector2, time: number) {
+    const rayCaster = new THREE.Raycaster();
+    rayCaster.setFromCamera(mouse, this.camera);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersection = new THREE.Vector3();
+    rayCaster.ray.intersectPlane(plane, intersection);
+
+    this.material.uniforms.uPosition.value = intersection;
+    this.material.uniforms.uClickTime.value = time;
+  }
+
   private addUIControls() {
     const uniforms = this.defaultUniforms;
     const shaderFolder = this.gui.addFolder("Perlin Noise");
-    shaderFolder
-      .add(uniforms, "uSpeed", 0.05, 3.0)
-      .name("Speed")
-      .onChange(() => (this.material.uniforms.uSpeed.value = uniforms.uSpeed));
     shaderFolder
       .addColor(uniforms, "uColor")
       .name("Color")
@@ -97,8 +115,30 @@ export class PerlinNoise {
         this.material.uniforms.uColor.value = this.defaultUniforms.uColor;
       });
     shaderFolder
+      .add(uniforms, "uSpeed", 0.0, 2.0)
+      .name("Color Speed")
+      .onChange(() => (this.material.uniforms.uSpeed.value = uniforms.uSpeed));
+    shaderFolder
+      .add(uniforms, "uWaveSpeed", 1.0, 20.0)
+      .name("Wave Speed")
+      .onChange(() => (this.material.uniforms.uWaveSpeed.value = uniforms.uWaveSpeed));
+    shaderFolder
+      .add(uniforms, "uWaveSpread", 1.0, 20.0)
+      .name("Wave Spread")
+      .onChange(() => (this.material.uniforms.uWaveSpread.value = uniforms.uWaveSpread));
+    shaderFolder
+      .add(uniforms, "uWaveDissipation", 0.0, 10.0)
+      .name("Wave Dissipation")
+      .onChange(() => (this.material.uniforms.uWaveDissipation.value = uniforms.uWaveDissipation));
+    shaderFolder
+      .add(uniforms, "uWaveForce", 0.0, 2.0)
+      .name("Wave Force")
+      .onChange(() => (this.material.uniforms.uWaveForce.value = uniforms.uWaveForce));
+    shaderFolder
       .add(uniforms, "uOctaves", 1, 10, 1)
       .name("Octaves")
-      .onChange(() => (this.material.uniforms.uOctaves.value = uniforms.uOctaves));
+      .onChange(
+        () => (this.material.uniforms.uOctaves.value = uniforms.uOctaves),
+      );
   }
 }

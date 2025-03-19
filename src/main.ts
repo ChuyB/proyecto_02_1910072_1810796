@@ -13,6 +13,7 @@ class App {
   private shader: Smoke | Trail | PerlinNoise;
   private clock: THREE.Clock;
   private controls: OrbitControls;
+  private elapsedTime: number;
 
   private camConfig = {
     fov: 75,
@@ -36,6 +37,7 @@ class App {
 
     // Setup clock
     this.clock = new THREE.Clock();
+    this.elapsedTime = this.clock.getElapsedTime();
 
     // Setup renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -60,7 +62,7 @@ class App {
     // GUI controls
     const gui = new GUI();
     const folder = gui.addFolder("General Settings");
-    const selectedMaterial = { position: 0 };
+    const selectedMaterial = { position: 2 };
     folder
       .add(selectedMaterial, "position", {
         Smoke: 0,
@@ -104,14 +106,21 @@ class App {
     // Add event listeners
     window.addEventListener("resize", this.onWindowResize);
     window.addEventListener("mousemove", (event) => {
-      if (
-        "updateMouse" in this.shader &&
-        typeof this.shader.updateMouse === "function"
-      ) {
+      if (this.shader instanceof Trail) {
         const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
         const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-
         this.shader.updateMouse(mouseX, mouseY);
+      }
+    });
+    window.addEventListener("click", (event) => {
+      if (this.shader instanceof PerlinNoise) {
+        let mouse = new THREE.Vector2();
+        mouse.set(
+          (event.clientX / window.innerWidth) * 2 - 1,
+          ((window.innerHeight - event.clientY) / window.innerHeight) * 2 - 1,
+        );
+
+        this.shader.updateMouse(mouse, this.elapsedTime);
       }
     });
 
@@ -120,8 +129,8 @@ class App {
   }
 
   private animate(): void {
-    const elapsedTime = this.clock.getElapsedTime();
-    this.shader.updateTime(elapsedTime);
+    this.elapsedTime = this.clock.getElapsedTime();
+    this.shader.updateTime(this.elapsedTime);
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }

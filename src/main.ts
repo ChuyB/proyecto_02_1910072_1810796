@@ -62,7 +62,7 @@ class App {
     // GUI controls
     const gui = new GUI();
     const folder = gui.addFolder("General Settings");
-    const selectedMaterial = { position: 2 };
+    const selectedMaterial = { position: 0 };
     folder
       .add(selectedMaterial, "position", {
         Smoke: 0,

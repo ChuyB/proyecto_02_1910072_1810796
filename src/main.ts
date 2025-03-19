@@ -3,13 +3,14 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
 import { Trail } from "./materials/trail";
 import { Smoke } from "./materials/smoke";
+import { PerlinNoise } from "./materials/perlinNoise";
 
 class App {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private mesh: THREE.Points;
-  private shader: Smoke | Trail;
+  private shader: Smoke | Trail | PerlinNoise;
   private clock: THREE.Clock;
   private controls: OrbitControls;
 
@@ -64,6 +65,7 @@ class App {
       .add(selectedMaterial, "position", {
         Smoke: 0,
         Trail: 1,
+        PerlinNoise: 2,
       })
       .name("Particle system")
       .onChange(() => {
@@ -73,16 +75,17 @@ class App {
         this.mesh.geometry = this.shader.geometry;
         this.scene.add(this.shader.emitter);
       });
-    
+
     // Arrays of geometries and shaders
     const smoke = new Smoke(this.camera, gui);
     const trail = new Trail(this.camera, gui);
-    const shaders = [smoke,trail];
-    
+    const perlinNoise = new PerlinNoise(this.camera, gui);
+    const shaders = [smoke, trail, perlinNoise];
+
     this.shader = shaders[selectedMaterial.position];
-    this.scene.add(this.shader.emitter);
     this.mesh = new THREE.Points(this.shader.geometry, this.shader.material);
     this.scene.add(this.mesh);
+    this.scene.add(this.shader.emitter);
 
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff);
@@ -101,10 +104,13 @@ class App {
     // Add event listeners
     window.addEventListener("resize", this.onWindowResize);
     window.addEventListener("mousemove", (event) => {
-      if ("updateMouse" in this.shader && typeof this.shader.updateMouse ==="function") {
+      if (
+        "updateMouse" in this.shader &&
+        typeof this.shader.updateMouse === "function"
+      ) {
         const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
         const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-      
+
         this.shader.updateMouse(mouseX, mouseY);
       }
     });

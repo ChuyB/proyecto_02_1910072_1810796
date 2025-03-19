@@ -85,7 +85,7 @@ export class PerlinNoise {
 
   private addUIControls() {
     const uniforms = this.defaultUniforms;
-    const shaderFolder = this.gui.addFolder("Perlin Noise Trails");
+    const shaderFolder = this.gui.addFolder("Perlin Noise");
     shaderFolder
       .add(uniforms, "uSpeed", 0.05, 3.0)
       .name("Speed")

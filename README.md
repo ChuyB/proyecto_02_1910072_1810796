@@ -23,3 +23,6 @@ El API utilizado es Three.js junto con GLSL para los shaders. Se utilizaron las 
 4. Ejecutar `npm run dev` para ejecutar el proyecto usando Three.js, usualmente en el puerto 5173. El comando te dice a que direccion ir en tu navegador.
 
 ## Cómo utilizar
+En [https://localhost:5173](https://localhost:5173) será accesible el proyecto.
+
+En la derecha se encontrará una interfáz a través de la cual se puede escoger uno de los 3 sistemas de partículas y cambiar valores relacionados con los mismos.
